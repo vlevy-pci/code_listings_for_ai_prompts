@@ -60,8 +60,8 @@ def read_file_content(filepath: str) -> str:
             return "\n".join(
                 line.rstrip() for line in file
             )  # Trim trailing whitespace from each line
-    except Exception as e:
-        return f"[Error reading file: {e}]"
+    except Exception as ex:
+        return f"[Error reading file: {ex}]"
 
 
 def process_files(
