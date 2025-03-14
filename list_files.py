@@ -3,13 +3,19 @@ import glob
 import os
 import sys
 import re
-from typing import List, Optional
 
 
 def list_files(
-    directory: str, pattern: str, recursive: bool, exclude_pattern: Optional[str]
-) -> List[str]:
-    """Retrieve a sorted list of files matching the pattern in the specified directory, excluding files matching the exclude regex pattern."""
+    directory: str, pattern: str, recursive: bool, exclude_pattern: str | None
+) -> list[str]:
+    """Retrieve a sorted list of files matching the pattern in the specified directory, excluding files matching the exclude regex pattern.
+
+    Args:
+        directory (str): The directory to search for files.
+        pattern (str): The pattern to match against file names.
+        recursive (bool): Whether to search recursively through subdirectories.
+        exclude_pattern (str | None): The regex pattern to exclude files from the search.
+    """
     search_pattern: str = (
         os.path.join(directory, "**", pattern)
         if recursive
@@ -32,12 +38,21 @@ def list_files(
 
 
 def get_relative_file_path(file_path: str, base_dir: str) -> str:
-    """Return the relative file path from the specified base directory."""
+    """Return the relative file path from the specified base directory.
+
+    Args:
+        file_path (str): The full path of the file.
+        base_dir (str): The base directory to calculate the relative path from.
+    """
     return os.path.relpath(file_path, base_dir)
 
 
 def read_file_content(filepath: str) -> str:
-    """Read and return the content of the given file, trimming trailing whitespace and removing BOM if present."""
+    """Read and return the content of the given file, trimming trailing whitespace and removing BOM if present.
+
+    Args:
+        filepath (str): The path to the file to read.
+    """
     try:
         with open(
             filepath, "r", encoding="utf-8-sig"
@@ -53,13 +68,23 @@ def process_files(
     directory: str,
     pattern: str,
     recursive: bool,
-    exclude_pattern: Optional[str],
-    output_file: Optional[str],
+    exclude_pattern: str | None,
+    output_file: str | None,
     append_mode: bool,
     names_only: bool,
 ) -> None:
-    """Process files and output either names only or full contents incrementally to stdout or a file."""
-    files: List[str] = list_files(directory, pattern, recursive, exclude_pattern)
+    """Process files and output either names only or full contents incrementally to stdout or a file.
+
+    Args:
+        directory (str): The directory to search for files.
+        pattern (str): The pattern to match against file names.
+        recursive (bool): Whether to search recursively through subdirectories.
+        exclude_pattern (str | None): The regex pattern to exclude files from the search.
+        output_file (str | None): The file to write the output to.
+        append_mode (bool): Whether to append to the output file instead of overwriting.
+        names_only (bool): Whether to only output file names.
+    """
+    files: list[str] = list_files(directory, pattern, recursive, exclude_pattern)
 
     # If an output file is specified, handle overwrite or append mode
     if output_file:
@@ -106,7 +131,11 @@ def process_files(
 
 
 def main() -> None:
-    """Parse command-line arguments and execute the program."""
+    """Parse command-line arguments and execute the program.
+
+    Args:
+        None
+    """
     parser = argparse.ArgumentParser(
         description="List and display file contents based on a pattern."
     )
