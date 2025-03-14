@@ -31,6 +31,11 @@ def list_files(
     return files
 
 
+def get_relative_file_path(file_path: str, base_dir: str) -> str:
+    """Return the relative file path from the specified base directory."""
+    return os.path.relpath(file_path, base_dir)
+
+
 def read_file_content(filepath: str) -> str:
     """Read and return the content of the given file, trimming trailing whitespace and removing BOM if present."""
     try:
@@ -44,12 +49,6 @@ def read_file_content(filepath: str) -> str:
         return f"[Error reading file: {e}]"
 
 
-def format_output(file_path: str, content: str, base_dir: str) -> str:
-    """Format the output with the file path and content enclosed in triple backticks."""
-    relative_path: str = os.path.relpath(file_path, base_dir)
-    return f"{relative_path}:\n```\n{content}\n```\n"
-
-
 def process_files(
     directory: str,
     pattern: str,
@@ -57,21 +56,26 @@ def process_files(
     exclude_pattern: Optional[str],
     output_file: Optional[str],
     append_mode: bool,
+    names_only: bool,
 ) -> None:
-    """Process files and output incrementally to stdout or a file."""
+    """Process files and output either names only or full contents incrementally to stdout or a file."""
     files: List[str] = list_files(directory, pattern, recursive, exclude_pattern)
 
     # If an output file is specified, handle overwrite or append mode
     if output_file:
         if os.path.exists(output_file) and not append_mode:
-            user_choice = (
-                input(f"File '{output_file}' already exists. Overwrite? (y/n): ")
-                .strip()
-                .lower()
-            )
-            if user_choice != "y":
-                print("Operation aborted.")
-                sys.exit(0)  # Exit the program if the user chooses not to overwrite
+            while True:
+                user_choice = (
+                    input(
+                        f"File '{output_file}' already exists. Overwrite (o) or Append (a)? "
+                    )
+                    .strip()
+                    .lower()
+                )
+                if user_choice in ["o", "a"]:
+                    append_mode = user_choice == "a"
+                    break
+                print("Please enter 'o' to Overwrite or 'a' to Append.")
 
         # Open file in append mode ('a') if requested, otherwise overwrite ('w')
         file_mode = "a" if append_mode else "w"
@@ -81,13 +85,16 @@ def process_files(
 
     try:
         for file in files:
-            content: str = read_file_content(file)
-            formatted_output: str = format_output(file, content, directory)
+            relative_path = get_relative_file_path(file, directory)
+
+            if names_only:
+                output = relative_path  # Only print file name
+            else:
+                content: str = read_file_content(file)
+                output = f"{relative_path}:\n```\n{content}\n```\n"
 
             # Write output incrementally
-            print(
-                formatted_output, file=output_stream, flush=True
-            )  # Flush ensures real-time writing
+            print(output, file=output_stream)
 
         if output_file:
             print(
@@ -132,6 +139,12 @@ def main() -> None:
         help="Exclude files matching this regex pattern in their full path (e.g., '.*[/\\\\]obj[/\\\\].*').",
     )
     parser.add_argument(
+        "-n",
+        "--names-only",
+        action="store_true",
+        help="Show only file names without displaying contents.",
+    )
+    parser.add_argument(
         "pattern", type=str, help="File pattern to search (e.g., '*.cs')."
     )
 
@@ -145,6 +158,7 @@ def main() -> None:
         args.exclude,
         args.output,
         args.append,
+        args.names_only,
     )
 
 
