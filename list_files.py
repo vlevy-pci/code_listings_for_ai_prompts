@@ -116,7 +116,9 @@ def process_files(
                 output = relative_path  # Only print file name
             else:
                 content: str = read_file_content(file)
-                output = f"{relative_path}:\n```\n{content}\n```\n"
+                output = (
+                    f"{relative_path}:\n```\n{content}\n``` End of {relative_path}\n"
+                )
 
             # Write output incrementally
             print(output, file=output_stream)
