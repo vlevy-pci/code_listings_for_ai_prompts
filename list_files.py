@@ -1,8 +1,8 @@
 import argparse
 import glob
 import os
-import sys
 import re
+import sys
 
 
 def list_files(
@@ -116,9 +116,7 @@ def process_files(
                 output = relative_path  # Only print file name
             else:
                 content: str = read_file_content(file)
-                output = (
-                    f"{relative_path}:\n```\n{content}\n``` End of {relative_path}\n"
-                )
+                output = f"Start of {relative_path} >>>>\n```\n{content}\n``` <<<< End of {relative_path}\n"
 
             # Write output incrementally
             print(output, file=output_stream)
