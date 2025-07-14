@@ -21,7 +21,7 @@ def list_files(
         if recursive
         else os.path.join(directory, pattern)
     )
-    files = sorted(glob.glob(search_pattern, recursive=recursive))
+    files = sorted(glob.glob(search_pattern, recursive=recursive, include_hidden=True))
 
     # Exclude files using a regex pattern
     if exclude_pattern:
