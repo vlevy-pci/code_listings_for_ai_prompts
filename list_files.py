@@ -28,7 +28,7 @@ def list_files(
         try:
             exclude_regex = re.compile(exclude_pattern)
             files = [file for file in files if not exclude_regex.search(file)]
-            print(f"Excluding files matching regex: {exclude_pattern}")
+            # print(f"Excluding files matching regex: {exclude_pattern}")
         except re.error as e:
             print(f"Invalid regex pattern: {e}")
             sys.exit(1)
@@ -71,6 +71,7 @@ def process_files(
     exclude_pattern: str | None,
     output_file: str | None,
     append_mode: bool,
+    force_overwrite: bool,
     names_only: bool,
 ) -> None:
     """Process files and output either names only or full contents incrementally to stdout or a file.
@@ -82,25 +83,27 @@ def process_files(
         exclude_pattern (str | None): The regex pattern to exclude files from the search.
         output_file (str | None): The file to write the output to.
         append_mode (bool): Whether to append to the output file instead of overwriting.
+        force_overwrite (bool): Whether to force overwrite the output file if it exists.
         names_only (bool): Whether to only output file names.
     """
     files: list[str] = list_files(directory, pattern, recursive, exclude_pattern)
 
     # If an output file is specified, handle overwrite or append mode
     if output_file:
-        if os.path.exists(output_file) and not append_mode:
-            while True:
-                user_choice = (
-                    input(
-                        f"File '{output_file}' already exists. Overwrite (o) or Append (a)? "
+        if os.path.exists(output_file):
+            if not append_mode and not force_overwrite:
+                while True:
+                    user_choice = (
+                        input(
+                            f"File '{output_file}' already exists. Overwrite (o) or Append (a)? "
+                        )
+                        .strip()
+                        .lower()
                     )
-                    .strip()
-                    .lower()
-                )
-                if user_choice in ["o", "a"]:
-                    append_mode = user_choice == "a"
-                    break
-                print("Please enter 'o' to Overwrite or 'a' to Append.")
+                    if user_choice in ["o", "a"]:
+                        append_mode = user_choice == "a"
+                        break
+                    print("Please enter 'o' to Overwrite or 'a' to Append.")
 
         # Open file in append mode ('a') if requested, otherwise overwrite ('w')
         file_mode = "a" if append_mode else "w"
@@ -137,7 +140,7 @@ def main() -> None:
         None
     """
     parser = argparse.ArgumentParser(
-        description="List and display file contents based on a pattern."
+        description="File Listings v.1.1.0. List and display file contents based on a pattern.",
     )
     parser.add_argument(
         "-r", "--recursive", action="store_true", help="Recursively search directories."
@@ -162,6 +165,12 @@ def main() -> None:
         help="Append to the output file instead of overwriting.",
     )
     parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force overwrite the output file if it exists. WARNING: This will overwrite the file without asking for confirmation.",
+    )
+    parser.add_argument(
         "-x",
         "--exclude",
         type=str,
@@ -174,7 +183,7 @@ def main() -> None:
         help="Show only file names without displaying contents.",
     )
     parser.add_argument(
-        "pattern", type=str, help="File pattern to search (e.g., '*.cs')."
+        "pattern", type=str, help="File pattern to search (e.g., '*.py')."
     )
 
     args = parser.parse_args()
@@ -187,6 +196,7 @@ def main() -> None:
         args.exclude,
         args.output,
         args.append,
+        args.force,
         args.names_only,
     )
 
